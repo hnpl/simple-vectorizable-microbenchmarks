@@ -1,52 +1,83 @@
-#include<iostream>
+#include<stdint.h>
+#include<vector>
 #include<cassert>
 
-void gather_load(const uint64_t* src, uint64_t* index, uint64_t* dst, const uint64_t& n_index)
+typedef uint64_t TElement;
+typedef uint64_t TIndex;
+
+void restricted_gather_load(TElement* __restrict__ dst, TElement* __restrict__ src, TIndex* __restrict__ indices, const TIndex& n_indices)
 {
-    for (uint64_t i = 0; i < n_index; i++)
-        dst[i] = src[index[i]];
+    for (TIndex i = 0; i < n_indices; i++)
+        dst[i] = src[indices[i]];
 }
+
+// Tell the compiler not to inline this function for having a deterministic behavior.
+// Originally, without the __restrict__ keyword, the compiler vectorizes the loop if this function is inlined, and does
+// not vectorize it if the function is not inlined (since src != dst is not proven by the compiler)
+__attribute__((noinline))
+void gather_load(std::vector<TElement>& dst, std::vector<TElement>& src, std::vector<TIndex>& indices)
+{
+    restricted_gather_load(dst.data(), src.data(), indices.data(), indices.size());
+}
+
+class IndexGenerator
+{
+    private:
+        TIndex seed;
+        TIndex mod;
+        TIndex next_index;
+    public:
+        IndexGenerator()
+        {
+        }
+        IndexGenerator(TIndex seed, TIndex mod)
+        {
+            // To have a sparse distribution of the indices, `mod` should be a prime number
+            this->seed = seed;
+            this->mod = mod;
+            this->next_index = seed;
+        }
+        void reset()
+        {
+            this->next_index = this->seed;
+        }
+        TIndex next()
+        {
+            TIndex curr_index = this->next_index;
+            this->next_index *= seed;
+            this->next_index %= mod;
+            return curr_index;
+        }
+};
 
 int main()
 {
     const int SIZE = 100003;
-    const int N_INDEX = 100000;
+    const int N_INDEX = 100002;
 
-    uint64_t src[SIZE];
-    uint64_t dst[SIZE];
-    uint64_t index[N_INDEX];
+    std::vector<TElement> src(SIZE, 0);
+    std::vector<TElement> dst(SIZE, 0);
+    std::vector<TIndex> indices(N_INDEX, 0);
 
     // Initialize the arrays
-    for (uint64_t i = 0; i < SIZE; i++)
+    for (TIndex i = 0; i < SIZE; i++)
         src[i] = i;
-    for (uint64_t i = 0; i < SIZE; i++)
-        dst[i] = 0;
-    for (uint64_t i = 0; i < N_INDEX; i++)
-        index[i] = 0;
 
     // Creating index
-    volatile const uint64_t seed = 3;
-    const uint64_t mod = 100003;
-    uint64_t w = seed;
-    for (uint64_t i = 0; i < N_INDEX; i++)
-    {
-        index[i] = w;
-        w *= seed;
-        w %= mod;
-    }
+    const TElement seed = 3;
+    const TElement mod = 100003;
+    // This index generator will essentially perform a permutation of the src to the dst
+    IndexGenerator rng(seed, mod);
+    for (TIndex i = 0; i < N_INDEX; i++)
+        indices[i] = rng.next();
 
     // Performing indexed-loads
-    gather_load(src, index, dst, N_INDEX);
+    gather_load(dst, src, indices);
 
-    // Checking
-    w = seed;
-    for (uint64_t i = 0; i < N_INDEX; i++)
-    {
-        assert(dst[i] == w);
-        w *= seed;
-        w %= mod;
-    }
+    // Checking result
+    rng.reset();
+    for (TIndex i = 0; i < N_INDEX; i++)
+        assert(dst[i] == rng.next());
 
     return 0;
 }
-
