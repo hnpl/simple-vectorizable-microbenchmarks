@@ -13,7 +13,7 @@ uint64_t vectorized_loop(uint64_t* A, uint64_t* B, uint64_t* C, const uint64_t& 
 
 int main(int argc, char* argv[])
 {
-    volatile const int SIZE = 100000;
+    volatile const int SIZE = 50;
 
     uint64_t A[SIZE];
     uint64_t B[SIZE];
