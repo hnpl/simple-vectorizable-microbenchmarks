@@ -52,8 +52,8 @@ class IndexGenerator
 
 int main()
 {
-    const int SIZE = 100003;
-    const int N_INDEX = 100002;
+    const int SIZE = 10000019;
+    const int N_INDEX = 10000019;
 
     std::vector<TElement> src(SIZE, 0);
     std::vector<TElement> dst(SIZE, 0);
@@ -64,8 +64,8 @@ int main()
         src[i] = i;
 
     // Creating index
-    const TElement seed = 3;
-    const TElement mod = 100003;
+    const TElement seed = 31;
+    const TElement mod = 10000019;
     // This index generator will essentially perform a permutation of the src to the dst
     IndexGenerator rng(seed, mod);
     for (TIndex i = 0; i < N_INDEX; i++)
