@@ -5,6 +5,7 @@
 typedef uint64_t TElement;
 typedef uint64_t TIndex;
 
+__attribute__((optimize("tree-vectorize")))
 void restricted_scatter_store(TElement* __restrict__ dst, TElement* __restrict__ src, TIndex* __restrict__ indices, const TIndex& n_indices)
 {
     for (TIndex i = 0; i < n_indices; i++)
@@ -14,7 +15,7 @@ void restricted_scatter_store(TElement* __restrict__ dst, TElement* __restrict__
 // Tell the compiler not to inline this function for having a deterministic behavior.
 // Originally, without the __restrict__ keyword, the compiler vectorizes the loop if this function is inlined, and does
 // not vectorize it if the function is not inlined (since src != dst is not proven by the compiler)
-__attribute__((noinline))
+__attribute__((noinline)) __attribute__((optimize("tree-vectorize")))
 void scatter_store(std::vector<TElement>& dst, std::vector<TElement>& src, std::vector<TIndex>& indices)
 {
     restricted_scatter_store(dst.data(), src.data(), indices.data(), indices.size());
