@@ -53,8 +53,8 @@ class IndexGenerator
 
 int main()
 {
-    const int SIZE = 10000019;
-    const int N_INDEX = 10000019;
+    const int SIZE = 10000018;
+    const int N_INDEX = 10000018;
 
     std::vector<TElement> src(SIZE, 0);
     std::vector<TElement> dst(SIZE, 0);
@@ -70,7 +70,7 @@ int main()
     // This index generator will essentially perform a permutation of the src to the dst
     IndexGenerator rng(seed, mod);
     for (TIndex i = 0; i < N_INDEX; i++)
-        indices[i] = rng.next();
+        indices[i] = rng.next()-1;
 
     // Performing indexed-loads
     scatter_store(dst, src, indices);
@@ -78,7 +78,7 @@ int main()
     // Checking result
     rng.reset();
     for (TIndex i = 0; i < N_INDEX; i++)
-        assert(dst[rng.next()] == i);
+        assert(dst[rng.next()-1] == i);
 
     return 0;
 }
