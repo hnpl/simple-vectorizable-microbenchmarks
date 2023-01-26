@@ -1,12 +1,15 @@
 CPP=/riscv/_install/bin/riscv64-unknown-linux-gnu-g++
 
-all: gather_load scatter_store
+all: gather_load scatter_store vadd_va_vb
 
 gather_load: gather_load.cpp
 	$(CPP) gather_load.cpp -O3 -march=rv64gcv -static -fno-tree-vectorize -o gather_load.rvv
 
 scatter_store: scatter_store.cpp
 	$(CPP) scatter_store.cpp -O3 -march=rv64gcv -static -fno-tree-vectorize -o scatter_store.rvv
+
+vadd_va_vb: vadd_va_vb.cpp
+	$(CPP) vadd_va_vb.cpp -O3 -march=rv64gcv -static -fno-tree-vectorize -o vadd_va_vb.rvv
 
 clean:
 	rm -rf *.rvv *.o
