@@ -14,7 +14,7 @@ endif
 all: stream_c
 
 stream_c: stream.c
-	$(CC) $(CFLAGS) -O -DARRAY_SIZE=$(ARRAY_SIZE) -DNTIMES=2 -DN_THREADS=$(N_THREADS) stream.c -o $(OUTPUT_PATH)/stream_c.$(ARRAY_SIZE) $(LDFLAGS)
+	$(CC) $(CFLAGS) -O -DARRAY_SIZE=$(ARRAY_SIZE) -DNTIMES=2 -DN_THREADS=$(N_THREADS) stream.c -o $(OUTPUT_PATH)/stream_c.$(ARRAY_SIZE).rvv $(LDFLAGS)
 
 clean:
 	rm -f *.o stream_c.*
