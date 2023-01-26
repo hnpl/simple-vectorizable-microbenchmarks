@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+__attribute__((optimize("tree-vectorize")))
 uint64_t vectorized_loop(uint64_t* A, uint64_t* B, uint64_t* C, const uint64_t& size)
 {
     uint64_t r = 0;
