@@ -1,6 +1,8 @@
 #include<stdint.h>
 #include<vector>
 #include<cassert>
+#include<chrono>
+#include<iostream>
 
 typedef uint64_t TElement;
 typedef uint64_t TIndex;
@@ -72,8 +74,22 @@ int main()
     for (TIndex i = 0; i < N_INDEX; i++)
         indices[i] = rng.next()-1;
 
+    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
     // Performing indexed-loads
     gather_load(dst, src, indices);
+    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
+
+    // https://stackoverflow.com/questions/57538507/how-to-convert-stdchronoduration-to-double-seconds
+    using namespace std::literals::chrono_literals;
+    double time = elapsed_time / 1.0s; // converting from duration to double
+    double data_size = 1.0 * SIZE * sizeof(TElement) * 2;
+    double bandwidth_bytes = data_size / time;
+    double bandwidth_GiB = bandwidth_bytes / 1024.0 / 1024.0 / 1024.0;
+
+    std::cout << "Elapsed_time: " << time << " s" << std::endl;
+    std::cout << "Bandwidth: " << bandwidth_GiB << " GiB/s" << std::endl;
 
     // Checking result
     rng.reset();
