@@ -6,11 +6,17 @@
 #include <iterator>
 #include <cassert>
 #include <cstdint>
+#include <cmath>
+#include <cassert>
+
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 typedef uint64_t TElement;
 typedef uint64_t TIndex;
 
-void gather(TElement* __restrict__ dst, TElement* __restrict__ src, TIndex* __restrict__ indices, const size_t& array_size) {
+void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size) {
     #pragma omp parallel
     {
         #pragma omp simd
@@ -20,7 +26,7 @@ void gather(TElement* __restrict__ dst, TElement* __restrict__ src, TIndex* __re
     }
 }
 
-void scatter(TElement* __restrict__ dst, TElement* __restrict__ src, TIndex* __restrict__ indices, const size_t& array_size) {
+void scatter(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size) {
     #pragma omp parallel
     {
         #pragma omp simd
@@ -30,31 +36,96 @@ void scatter(TElement* __restrict__ dst, TElement* __restrict__ src, TIndex* __r
     }
 }
 
-void read_inputs(std::vector<TElement>& dst, std::vector<TElement>& src, std::vector<TIndex>& indices) {
-    std::ifstream src_file("src_file.txt");
-    std::istream_iterator<TElement> src_start(src_file), src_end;
-    src = std::vector<TElement>(src_start, src_end);
-    src_file.close();
+enum KernelType { Gather = 0, Scatter };
 
-    dst.resize(src.size());
+class ScatterGatherKernel {
+  private:
+    std::vector<TIndex> index;
+    KernelType kernel_type;
+    TIndex multiplicity;
+  public:
+    ScatterGatherKernel() { kernel_type = KernelType::Gather; multiplicity = 0; }
+    ScatterGatherKernel(std::vector<TIndex>& index, const KernelType& kernel_type, const TIndex& multiplicity) {
+        this->setIndex(index);
+        this->setType(kernel_type);
+        this->setMultiplicity(multiplicity);
+    }
+    void setIndex(const std::vector<TIndex>& index) {
+        this->index = std::move(index);
+    }
+    void setType(const KernelType& kernel_type) {
+        this->kernel_type = kernel_type;
+    }
+    void setMultiplicity(const TIndex& multiplicity) {
+        this->multiplicity = multiplicity;
+    }
+    size_t getMaxIndex() const {
+        auto it = std::max_element(this->index.begin(), this->index.end());
+        return std::max(*it, this->index.size());
+    }
+    void doPrint() const {
+        std::cout << "Kernel" << std::endl;
+        std::cout << "  + type: ";
+        if (this->kernel_type == KernelType::Gather)
+            std::cout << "Gather";
+        else
+            std::cout << "Scatter";
+        std::cout << std::endl;
+        std::cout << "  + size: " << this->index.size() << std::endl;
+        std::cout << "  + multiplicity: " << this->multiplicity << std::endl;
+    }
+    void execute(std::vector<TElement>& dst, std::vector<TElement>& src) const {
+        std::cout << "Executing ";
+        this->doPrint();
+        switch (this->kernel_type) {
+            case KernelType::Gather:
+                for (size_t iter = 0; iter < this->multiplicity; iter++)
+                    gather(dst.data(), src.data(), this->index.data(), this->index.size());
+                break;
+            case KernelType::Scatter:
+                for (size_t iter = 0; iter < this->multiplicity; iter++)
+                    scatter(dst.data(), src.data(), this->index.data(), this->index.size());
+                break;
+            default:
+                std::cout << "Warn: unregconized kernel type" << std::endl;
+                break;
+        }
+    }
+};
 
-    std::ifstream idx_file("idx_file.txt");
-    std::istream_iterator<TIndex> idx_start(idx_file), idx_end;
-    indices = std::vector<TIndex>(idx_start, idx_end);
+std::vector<ScatterGatherKernel> read_spatter_json() {
+    std::vector<ScatterGatherKernel> kernels;
+    std::ifstream idx_file("spatter.json");
+    json j = json::parse(idx_file);
+    const size_t numKernels = j.size();
+    kernels.reserve(numKernels);
+    for (size_t i = 0; i < numKernels; i++) {
+        kernels.push_back(ScatterGatherKernel());
+        kernels.back().setIndex(j[i]["pattern"]);
+        kernels.back().setMultiplicity(j[i]["count"]);
+        if (j[i]["kernel"] == "Gather")
+            kernels.back().setType(KernelType::Gather);
+        else if (j[i]["kernel"] == "Scatter")
+            kernels.back().setType(KernelType::Scatter);
+    }
     idx_file.close();
+    return kernels;
 }
 
-void verify_gather(const std::vector<TElement>& dst, const std::vector<TElement>& src, const std::vector<TIndex>& indices) {
-    for (size_t idx = 0; idx < indices.size(); idx++) {
-        assert(dst[idx] == src[indices[idx]]);
-    }
+void executeKernels() {
+    auto kernels = read_spatter_json();
+    size_t array_size = 0;
+    for (auto const& k: kernels)
+        array_size = std::max(array_size, k.getMaxIndex()+1);
+    array_size = pow(2, int(log(array_size) / log(2)) + 1);
+
+    std::vector<TElement> src = std::vector<TElement>(array_size, 2);
+    std::vector<TElement> dst = std::vector<TElement>(array_size, 3);
+    for (auto const& k: kernels)
+        k.execute(dst, src);
 }
 
 int main() {
-    std::vector<TElement> dst, src;
-    std::vector<TIndex> indices;
-    read_inputs(dst, src, indices);
-    gather(dst.data(), src.data(), indices.data(), indices.size());
-    verify_gather(dst, src, indices);
+    executeKernels();
     return 0;
 }
