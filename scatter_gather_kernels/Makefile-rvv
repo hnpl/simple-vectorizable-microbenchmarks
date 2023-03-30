@@ -1,16 +1,13 @@
 CXX = /riscv/_install/bin/riscv64-unknown-linux-gnu-g++
 OUTPUT_PATH ?= .
 OUTPUT_SUFFIX = .rvv
-CFLAGS = -O3 -fopenmp -march=rv64gcv -ftree-vectorize -ftree-vectorizer-verbose=5 -fopt-info-vec-missed -g
+CFLAGS = -O3 -fopenmp -march=rv64gcv -fno-tree-vectorize
 JSON_LIBRARY_INCLUDE = ../json/single_include/nlohmann/
 
-# if both m5ops_header_path and m5_build_path are defined, we build the scatter/gather kernels with the m5 annotations
-ifneq ($(M5_BUILD_PATH),)
-  CFLAGS += -I$(M5OPS_HEADER_PATH)
-  CFLAGS += -O -DGEM5_ANNOTATION=1 
-  LDFLAGS += -lm5 -L$(M5_BUILD_PATH)/out/
-  OUTPUT_SUFFIX += .m5
-endif
+CFLAGS += -I$(M5OPS_HEADER_PATH)
+CFLAGS += -O -DGEM5_ANNOTATION=1 
+LDFLAGS += -lm5 -L$(M5_BUILD_PATH)/out/
+OUTPUT_SUFFIX += .m5
 
 CFLAGS += -I$(JSON_LIBRARY_INCLUDE)
 

@@ -25,6 +25,7 @@ double get_second() {
     return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
+__attribute__((optimize("tree-vectorize")))
 void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size) {
     #pragma omp parallel
     {
@@ -35,6 +36,7 @@ void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex
     }
 }
 
+__attribute__((optimize("tree-vectorize")))
 void scatter(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size) {
     #pragma omp parallel
     {
