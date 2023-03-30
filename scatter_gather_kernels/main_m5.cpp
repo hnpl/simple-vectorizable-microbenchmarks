@@ -21,32 +21,16 @@ using json = nlohmann::json;
 typedef uint64_t TElement;
 typedef uint64_t TIndex;
 
+extern void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size);
+
+extern void scatter(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size);
+
 double get_second() {
     struct timeval tp;
     struct timezone tzp;
     int i;
     i = gettimeofday(&tp,&tzp);
     return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
-}
-
-void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size) {
-    #pragma omp parallel
-    {
-        #pragma omp simd
-        for (size_t idx = 0; idx < array_size; idx++) {
-            dst[idx] = src[indices[idx]];
-        }
-    }
-}
-
-void scatter(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size) {
-    #pragma omp parallel
-    {
-        #pragma omp simd
-        for (size_t idx = 0; idx < array_size; idx++) {
-            dst[indices[idx]] = src[idx];
-        }
-    }
 }
 
 enum KernelType { Gather = 0, Scatter };
