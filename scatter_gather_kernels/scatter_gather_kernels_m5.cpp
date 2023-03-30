@@ -106,9 +106,9 @@ class ScatterGatherKernel {
     }
 };
 
-std::vector<ScatterGatherKernel> read_spatter_json() {
+std::vector<ScatterGatherKernel> read_spatter_json(const char* filename) {
     std::vector<ScatterGatherKernel> kernels;
-    std::ifstream idx_file("spatter.json");
+    std::ifstream idx_file(filename);
     json j = json::parse(idx_file);
     const size_t numKernels = j.size();
     kernels.reserve(numKernels);
@@ -125,8 +125,8 @@ std::vector<ScatterGatherKernel> read_spatter_json() {
     return kernels;
 }
 
-void executeKernels() {
-    auto kernels = read_spatter_json();
+void executeKernels(const char* filename) {
+    auto kernels = read_spatter_json(filename);
     size_t array_size = 0;
     for (auto const& k: kernels)
         array_size = std::max(array_size, k.getMaxIndex()+1);
@@ -154,7 +154,11 @@ void executeKernels() {
 #endif
 }
 
-int main() {
-    executeKernels();
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        std::cout << "Usage: " << argv[0] << " <path_to_json_file>" << std::endl;
+        return 1;
+    }
+    executeKernels(argv[1]);
     return 0;
 }
