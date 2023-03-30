@@ -1,6 +1,6 @@
 CXX = /riscv/_install/bin/riscv64-unknown-linux-gnu-g++
 OUTPUT_PATH ?= .
-OUTPUT_SUFFIX = .out.rv64gc
+OUTPUT_SUFFIX = .rv64gc
 CFLAGS = -O3 -fopenmp -march=rv64gc
 JSON_LIBRARY_INCLUDE = ../json/single_include/nlohmann/
 
@@ -20,5 +20,5 @@ scatter_gather_kernels: scatter_gather_kernels_m5.cpp
 	$(CXX) $(CFLAGS) scatter_gather_kernels_m5.cpp -o $(OUTPUT_PATH)/scatter_gather_kernels$(OUTPUT_SUFFIX) $(LDFLAGS)
 
 clean:
-	rm -f *.o scatter_gather_kernels.out.*
+	rm -f *.o scatter_gather_kernels.rv64gc*
 
