@@ -1,24 +1,33 @@
 CXX = /riscv/_install/bin/riscv64-unknown-linux-gnu-g++
 OUTPUT_PATH ?= .
 OUTPUT_SUFFIX = .rv64gc
-CFLAGS = -O3 -fopenmp -march=rv64gc
+CXXFLAGS_KERNEL = -O3 -fopenmp
+CXXFLAGS_MAIN = -O3 -fopenmp
+LDFLAGS = -O3 -fopenmp
 JSON_LIBRARY_INCLUDE = ../json/single_include/nlohmann/
 
 # if both m5ops_header_path and m5_build_path are defined, we build the scatter/gather kernels with the m5 annotations
 ifneq ($(M5_BUILD_PATH),)
-  CFLAGS += -I$(M5OPS_HEADER_PATH)
-  CFLAGS += -O -DGEM5_ANNOTATION=1 
-  LDFLAGS += -lm5 -L$(M5_BUILD_PATH)/out/
-  OUTPUT_SUFFIX += .m5
+  CXXFLAGS_MAIN += -I$(M5OPS_HEADER_PATH)
+  CXXFLAGS_MAIN += -O -DGEM5_ANNOTATION=1
+  LDFLAGS += -I$(M5OPS_HEADER_PATH) -lm5 -L$(M5_BUILD_PATH)/out/
+  TMP_OUTPUT_SUFFIX = $(OUTPUT_SUFFIX)
+  OUTPUT_SUFFIX := $(TMP_OUTPUT_SUFFIX).m5
 endif
 
-CFLAGS += -I$(JSON_LIBRARY_INCLUDE)
+CXXFLAGS_MAIN += -I$(JSON_LIBRARY_INCLUDE)
 
-all: scatter_gather_kernels
+all: main
 
-scatter_gather_kernels: scatter_gather_kernels_m5.cpp
-	$(CXX) $(CFLAGS) scatter_gather_kernels_m5.cpp -o $(OUTPUT_PATH)/scatter_gather_kernels$(OUTPUT_SUFFIX) $(LDFLAGS)
+scatter_gather_kernels$(OUTPUT_SUFFIX).o: scatter_gather_kernels.cpp
+	$(CXX) $(CXXFLAGS_KERNEL) -c scatter_gather_kernels.cpp -o $(OUTPUT_PATH)/scatter_gather_kernels$(OUTPUT_SUFFIX).o
+
+main_m5$(OUTPUT_SUFFIX).o: main_m5.cpp
+	$(CXX) $(CXXFLAGS_MAIN) -c main_m5.cpp -o $(OUTPUT_PATH)/main_m5$(OUTPUT_SUFFIX).o
+
+main: scatter_gather_kernels$(OUTPUT_SUFFIX).o main_m5$(OUTPUT_SUFFIX).o
+	$(CXX) main_m5$(OUTPUT_SUFFIX).o scatter_gather_kernels$(OUTPUT_SUFFIX).o -o $(OUTPUT_PATH)/main$(OUTPUT_SUFFIX) $(LDFLAGS)
 
 clean:
-	rm -f *.o scatter_gather_kernels.rv64gc*
+	rm -f *$(OUTPUT_SUFFIX).o main$(OUTPUT_SUFFIX)
 
