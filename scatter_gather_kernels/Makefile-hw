@@ -1,0 +1,16 @@
+CXX = g++
+OUTPUT_PATH ?= .
+OUTPUT_SUFFIX = .hw
+CFLAGS = -O3 -fopenmp -march=native -ftree-vectorize
+JSON_LIBRARY_INCLUDE = ../json/single_include/nlohmann/
+
+CFLAGS += -I$(JSON_LIBRARY_INCLUDE)
+
+all: scatter_gather_kernels
+
+scatter_gather_kernels: scatter_gather_kernels.cpp
+	$(CXX) $(CFLAGS) scatter_gather_kernels.cpp -o $(OUTPUT_PATH)/scatter_gather_kernels$(OUTPUT_SUFFIX) $(LDFLAGS)
+
+clean:
+	rm -f *.o scatter_gather_kernels.hw*
+
