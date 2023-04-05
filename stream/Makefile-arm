@@ -1,8 +1,8 @@
-CC = gcc
-CXX = g++
+CC = aarch64-linux-gnu-gcc
+CXX = aarch64-linux-gnu-g++
 OUTPUT_PATH ?= .
-OUTPUT_SUFFIX = .hw
-CFLAGS = -O3 -fopenmp -funroll-loops
+OUTPUT_SUFFIX = .arm
+CFLAGS = -O3 -fopenmp -march=armv8.1-a+sve
 CXXFLAGS = -O3 -fopenmp
 LDFLAGS = -O3 -fopenmp
 
