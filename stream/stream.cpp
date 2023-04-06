@@ -6,9 +6,10 @@
 #include <limits.h>
 #include <sys/time.h>
 
-#include<vector>
-#include<iostream>
-#include<cstdlib>
+#include <vector>
+#include <iostream>
+#include <cstdlib>
+#include <chrono>
 
 // https://stackoverflow.com/questions/3437404/min-and-max-in-c
 #define max(a,b) \
@@ -45,10 +46,10 @@ void array_verify(const std::vector<TElement>&, TElement, int*, TElement*, TElem
 void report(const size_t&);
 
 // external functions
-extern "C" double do_copy(TElement* __restrict__ dst, TElement* __restrict__ src, const size_t array_size);
-extern "C" double do_scale(TElement* __restrict__ dst, TElement* __restrict__ src, const TElement scale_factor, const size_t array_size);
-extern "C" double do_add(TElement* __restrict__ dst, TElement* __restrict__ src1, TElement* __restrict__ src2, const size_t array_size);
-extern "C" double do_triad(TElement* __restrict__ dst, TElement* __restrict__ src1, TElement* __restrict__src2, const TElement scale_factor, const size_t array_size);
+extern "C" void do_copy(TElement* __restrict__ dst, TElement* __restrict__ src, const size_t array_size);
+extern "C" void do_scale(TElement* __restrict__ dst, TElement* __restrict__ src, const TElement scale_factor, const size_t array_size);
+extern "C" void do_add(TElement* __restrict__ dst, TElement* __restrict__ src1, TElement* __restrict__ src2, const size_t array_size);
+extern "C" void do_triad(TElement* __restrict__ dst, TElement* __restrict__ src1, TElement* __restrict__src2, const TElement scale_factor, const size_t array_size);
 
 // interfacing to the external functions
 double copy(std::vector<TElement>& dst, std::vector<TElement>& src);
@@ -122,19 +123,36 @@ array_verify(const std::vector<TElement>& arr, TElement expected_value,
 
 double copy(std::vector<TElement>& dst, std::vector<TElement>& src)
 {
-    return do_copy(dst.data(), src.data(), dst.size());
+    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
+    do_copy(dst.data(), src.data(), dst.size());
+    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> delta_t = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
+    return delta_t.count();
 }
 double scale(std::vector<TElement>& dst, std::vector<TElement>& src, const TElement& scale_factor)
 {
-    return do_scale(dst.data(), src.data(), scale_factor, dst.size());
+    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
+    do_scale(dst.data(), src.data(), scale_factor, dst.size());
+    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> delta_t = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
+    return delta_t.count();
 }
 double add(std::vector<TElement>& dst, std::vector<TElement>& src1, std::vector<TElement>& src2)
 {
-    return do_add(dst.data(), src1.data(), src2.data(), dst.size());
+    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
+    do_add(dst.data(), src1.data(), src2.data(), dst.size());
+    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> delta_t = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
+    return delta_t.count();
+
 }
 double triad(std::vector<TElement>& dst, std::vector<TElement>& src1, std::vector<TElement>& src2, const TElement& scale_factor)
 {
-    return do_triad(dst.data(), src1.data(), src2.data(), scale_factor, dst.size());
+    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
+    do_triad(dst.data(), src1.data(), src2.data(), scale_factor, dst.size());
+    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> delta_t = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
+    return delta_t.count();
 }
 
 
