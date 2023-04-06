@@ -2,9 +2,9 @@ CC = gcc
 CXX = g++
 OUTPUT_PATH ?= .
 OUTPUT_SUFFIX = .hw
-CFLAGS = -O3 -fopenmp -funroll-loops
-CXXFLAGS = -O3 -fopenmp
-LDFLAGS = -O3 -fopenmp
+CFLAGS_KERNEL = -O2 -fopenmp
+CXXFLAGS = -O2 -fopenmp
+LDFLAGS = -O2 -fopenmp
 
 # if both m5ops_header_path and m5_build_path are defined, we build the STREAM benchmark with the m5 annotations
 ifneq ($(M5_BUILD_PATH),)
@@ -18,7 +18,7 @@ endif
 all: stream$(OUTPUT_SUFFIX)
 
 stream_kernels$(OUTPUT_SUFFIX).o: stream_kernels.c
-	$(CC) $(CFLAGS) -c stream_kernels.c -o $(OUTPUT_PATH)/stream_kernels$(OUTPUT_SUFFIX).o
+	$(CC) $(CFLAGS_KERNEL) -c stream_kernels.c -o $(OUTPUT_PATH)/stream_kernels$(OUTPUT_SUFFIX).o
 
 stream$(OUTPUT_SUFFIX).o: stream.cpp
 	$(CXX) $(CXXFLAGS) -c stream.cpp -o $(OUTPUT_PATH)/stream$(OUTPUT_SUFFIX).o
