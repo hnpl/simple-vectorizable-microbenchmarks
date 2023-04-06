@@ -11,6 +11,10 @@
 #include <cstdlib>
 #include <chrono>
 
+#ifdef GEM5_ANNOTATION
+#include <gem5/m5ops.h>
+#endif
+
 // https://stackoverflow.com/questions/3437404/min-and-max-in-c
 #define max(a,b) \
 	({ __typeof__ (a) _a = (a); \
@@ -81,10 +85,16 @@ int main(int argc, char* argv[])
     triad(a, b, c, scale_factor);
 
     // 1 iteration
+#ifdef GEM5_ANNOTATION
+    m5_work_begin(0,0);
+#endif
     t_copy = copy(c, a);
     t_scale = scale(b, c, scale_factor);
     t_add = add(c, a, b);
     t_triad = triad(a, b, c, scale_factor);
+#ifdef GEM5_ANNOTATION
+    m5_work_end(0,0);
+#endif
 
     expected_a = 1.0;
     expected_b = 2.0;
