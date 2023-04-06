@@ -43,7 +43,8 @@ static double min_error_c = 0.0;
 
 // functions
 void array_verify(const std::vector<TElement>&, TElement, int*, TElement*, TElement*);
-void report(const size_t&);
+void report(const size_t&, const size_t&);
+size_t get_num_omp_threads();
 
 // external functions
 extern "C" void do_copy(TElement* __restrict__ dst, TElement* __restrict__ src, const size_t array_size);
@@ -64,6 +65,9 @@ int main(int argc, char* argv[])
         std::cout << "Usage: " << argv[0] << " <array_size>" << std::endl;
         return 1;
     }
+
+    size_t num_threads = get_num_omp_threads();
+
     size_t array_size = atoi(argv[1]);
     static std::vector<TElement> a(array_size, 1);
     static std::vector<TElement> b(array_size, 2);
@@ -97,7 +101,7 @@ int main(int argc, char* argv[])
     array_verify(b, expected_b, &error_count_b, &min_error_b, &max_error_b);
     array_verify(c, expected_c, &error_count_c, &min_error_c, &max_error_c);
 
-    report(array_size);
+    report(array_size, num_threads);
 }
 
 void
@@ -119,6 +123,17 @@ array_verify(const std::vector<TElement>& arr, TElement expected_value,
             *max_error = max(diff, *max_error);
         }
     }
+}
+
+size_t get_num_omp_threads()
+{
+    size_t num_threads = 0;
+#ifdef _OPENMP
+#pragma omp parallel
+#pragma omp atomic
+    num_threads++;
+#endif
+    return num_threads;
 }
 
 double copy(std::vector<TElement>& dst, std::vector<TElement>& src)
@@ -156,7 +171,7 @@ double triad(std::vector<TElement>& dst, std::vector<TElement>& src1, std::vecto
 }
 
 
-void report(const size_t& array_size)
+void report(const size_t& array_size, const size_t& num_threads)
 {
     double data_size_bytes = array_size * sizeof(TElement);
     double data_size_GiB = data_size_bytes / 1024.0 / 1024.0 / 1024.0;
@@ -165,6 +180,7 @@ void report(const size_t& array_size)
     double add_bandwidth = 3.0 * data_size_GiB / t_add;
     double triad_bandwidth = 3.0 * data_size_GiB / t_triad;
     printf("Each array size: %f GiB\n", data_size_GiB);
+    printf("Number of threads: %ld\n", num_threads);
     printf("Copy\n");
     printf("Bandwidth: %f GiB/s\n", copy_bandwidth);
     printf("Time: %f s\n", t_copy);

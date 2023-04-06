@@ -1,16 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
-#include <math.h>
-#include <float.h>
-#include <limits.h>
-#include <sys/time.h>
 
 typedef double TElement;
 
 void do_copy(TElement* restrict dst, TElement* restrict src, const size_t array_size)
 {
-    #pragma omp parallel for schedule(static)
+    #pragma omp parallel for
     for (size_t k = 0; k < array_size; k++)
         dst[k] = src[k];
 }
