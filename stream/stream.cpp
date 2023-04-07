@@ -54,7 +54,7 @@ size_t get_num_omp_threads();
 extern "C" void do_copy(TElement* __restrict__ dst, TElement* __restrict__ src, const size_t array_size);
 extern "C" void do_scale(TElement* __restrict__ dst, TElement* __restrict__ src, const TElement scale_factor, const size_t array_size);
 extern "C" void do_add(TElement* __restrict__ dst, TElement* __restrict__ src1, TElement* __restrict__ src2, const size_t array_size);
-extern "C" void do_triad(TElement* __restrict__ dst, TElement* __restrict__ src1, TElement* __restrict__src2, const TElement scale_factor, const size_t array_size);
+extern "C" void do_triad(TElement* __restrict__ dst, TElement* __restrict__ src1, TElement* __restrict__ src2, const TElement scale_factor, const size_t array_size);
 
 // interfacing to the external functions
 double copy(std::vector<TElement>& dst, std::vector<TElement>& src);
