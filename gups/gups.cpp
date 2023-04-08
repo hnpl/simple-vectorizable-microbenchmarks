@@ -3,6 +3,11 @@
 #include <numeric>
 #include <chrono>
 
+#ifdef GEM5_ANNOTATION
+#include <gem5/m5ops.h>
+#endif
+
+
 typedef uint64_t TElement;
 typedef uint64_t TIndex;
 
@@ -26,9 +31,15 @@ int main(int argc, char* argv[])
 
     TIndex numUpdates = numTableElements*4;
 
+#ifdef GEM5_ANNOTATION
+    m5_work_begin(0,0);
+#endif
     const auto t_start = std::chrono::steady_clock::now();
     doRandomAccess(table.data(), numTableElements, numUpdates, numUpdatesPerBurst);
     const auto t_end = std::chrono::steady_clock::now();
+#ifdef GEM5_ANNOTATION
+    m5_work_end(0,0);
+#endif
     std::chrono::duration<double> delta_t = t_end - t_start;
 
     size_t numThreads = get_num_omp_threads();
