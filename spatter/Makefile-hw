@@ -1,7 +1,7 @@
 CXX = g++
 OUTPUT_PATH ?= .
 OUTPUT_SUFFIX = .hw
-CXXFLAGS = -O3 -fopenmp -march=native -ftree-vectorize
+CXXFLAGS = -O3 -fopenmp -ftree-vectorize
 LDFLAGS = -O3 -fopenmp
 JSON_LIBRARY_INCLUDE = ../json/single_include/nlohmann/
 
