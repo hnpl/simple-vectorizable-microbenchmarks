@@ -123,7 +123,7 @@ void executeKernels(const char* filename) {
     double t_end = 0;
 
 #ifdef GEM5_ANNOTATION
-    m5_exit(0);
+    m5_work_begin(0, 0);
 #endif
     for (auto const& k: kernels) {
         t_start = get_second();
@@ -134,7 +134,7 @@ void executeKernels(const char* filename) {
     }
     std::cout << "Total Elapsed Time: " << (t_total) << " seconds" << std::endl;
 #ifdef GEM5_ANNOTATION
-    m5_exit(0);
+    m5_work_end(0, 0);
 #endif
 }
 
