@@ -5,6 +5,15 @@ CXXFLAGS = -O3 -fopenmp -ftree-vectorize
 LDFLAGS = -O3 -fopenmp
 JSON_LIBRARY_INCLUDE = ../json/single_include/nlohmann/
 
+# if both m5ops_header_path and m5_build_path are defined, we build the scatter/gather kernels with the m5 annotations
+ifneq ($(M5_BUILD_PATH),)
+  CXXFLAGS_MAIN += -I$(M5OPS_HEADER_PATH)
+  CXXFLAGS_MAIN += -O -DGEM5_ANNOTATION=1
+  LDFLAGS += -I$(M5OPS_HEADER_PATH) -lm5 -L$(M5_BUILD_PATH)/out/
+  TMP_OUTPUT_SUFFIX = $(OUTPUT_SUFFIX)
+  OUTPUT_SUFFIX := $(TMP_OUTPUT_SUFFIX).m5
+endif
+
 CXXFLAGS += -I$(JSON_LIBRARY_INCLUDE)
 
 all: spatter

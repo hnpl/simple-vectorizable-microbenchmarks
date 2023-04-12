@@ -10,6 +10,10 @@
 #include <cassert>
 #include <sys/time.h>
 
+#ifdef GEM5_ANNOTATION
+#include "gem5/m5ops.h"
+#endif
+
 #include "json.hpp"
 
 using json = nlohmann::json;
@@ -117,6 +121,10 @@ void executeKernels(const char* filename) {
     double t_total = 0;
     double t_start = 0;
     double t_end = 0;
+
+#ifdef GEM5_ANNOTATION
+    m5_work_begin(0, 0);
+#endif
     for (auto const& k: kernels) {
         t_start = get_second();
         k.execute(dst, src);
@@ -125,6 +133,9 @@ void executeKernels(const char* filename) {
         std::cout << "Execute time: " << (t_end - t_start) << " seconds" << std::endl;
     }
     std::cout << "Total Elapsed Time: " << (t_total) << " seconds" << std::endl;
+#ifdef GEM5_ANNOTATION
+    m5_work_end(0, 0);
+#endif
 }
 
 int main(int argc, char* argv[]) {
