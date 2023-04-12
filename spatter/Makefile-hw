@@ -7,17 +7,17 @@ JSON_LIBRARY_INCLUDE = ../json/single_include/nlohmann/
 
 CXXFLAGS += -I$(JSON_LIBRARY_INCLUDE)
 
-all: main
+all: spatter
 
 scatter_gather_kernels$(OUTPUT_SUFFIX).o: scatter_gather_kernels.cpp
 	$(CXX) $(CXXFLAGS) -c scatter_gather_kernels.cpp -o $(OUTPUT_PATH)/scatter_gather_kernels$(OUTPUT_SUFFIX).o
 
-main$(OUTPUT_SUFFIX).o: main.cpp
-	$(CXX) $(CXXFLAGS) -c main.cpp -o $(OUTPUT_PATH)/main$(OUTPUT_SUFFIX).o
+spatter$(OUTPUT_SUFFIX).o: spatter.cpp
+	$(CXX) $(CXXFLAGS) -c spatter.cpp -o $(OUTPUT_PATH)/spatter$(OUTPUT_SUFFIX).o
 
-main: scatter_gather_kernels$(OUTPUT_SUFFIX).o main$(OUTPUT_SUFFIX).o
-	$(CXX) $(LDFLAGS) main$(OUTPUT_SUFFIX).o scatter_gather_kernels$(OUTPUT_SUFFIX).o -o $(OUTPUT_PATH)/main$(OUTPUT_SUFFIX)
+spatter: scatter_gather_kernels$(OUTPUT_SUFFIX).o spatter$(OUTPUT_SUFFIX).o
+	$(CXX) $(LDFLAGS) spatter$(OUTPUT_SUFFIX).o scatter_gather_kernels$(OUTPUT_SUFFIX).o -o $(OUTPUT_PATH)/spatter$(OUTPUT_SUFFIX)
 
 clean:
-	rm -f *$(OUTPUT_SUFFIX).o main$(OUTPUT_SUFFIX)
+	rm -f *$(OUTPUT_SUFFIX).o spatter$(OUTPUT_SUFFIX)
 

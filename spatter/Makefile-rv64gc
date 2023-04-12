@@ -17,17 +17,17 @@ endif
 
 CXXFLAGS_MAIN += -I$(JSON_LIBRARY_INCLUDE)
 
-all: main
+all: spatter
 
 scatter_gather_kernels$(OUTPUT_SUFFIX).o: scatter_gather_kernels.cpp
 	$(CXX) $(CXXFLAGS_KERNEL) -c scatter_gather_kernels.cpp -o $(OUTPUT_PATH)/scatter_gather_kernels$(OUTPUT_SUFFIX).o
 
-main_m5$(OUTPUT_SUFFIX).o: main_m5.cpp
-	$(CXX) $(CXXFLAGS_MAIN) -c main_m5.cpp -o $(OUTPUT_PATH)/main_m5$(OUTPUT_SUFFIX).o
+spatter_m5$(OUTPUT_SUFFIX).o: spatter_m5.cpp
+	$(CXX) $(CXXFLAGS_MAIN) -c spatter_m5.cpp -o $(OUTPUT_PATH)/spatter_m5$(OUTPUT_SUFFIX).o
 
-main: scatter_gather_kernels$(OUTPUT_SUFFIX).o main_m5$(OUTPUT_SUFFIX).o
-	$(CXX) main_m5$(OUTPUT_SUFFIX).o scatter_gather_kernels$(OUTPUT_SUFFIX).o -o $(OUTPUT_PATH)/main$(OUTPUT_SUFFIX) $(LDFLAGS)
+spatter: scatter_gather_kernels$(OUTPUT_SUFFIX).o spatter_m5$(OUTPUT_SUFFIX).o
+	$(CXX) spatter_m5$(OUTPUT_SUFFIX).o scatter_gather_kernels$(OUTPUT_SUFFIX).o -o $(OUTPUT_PATH)/spatter$(OUTPUT_SUFFIX) $(LDFLAGS)
 
 clean:
-	rm -f *$(OUTPUT_SUFFIX).o main$(OUTPUT_SUFFIX)
+	rm -f *$(OUTPUT_SUFFIX).o spatter$(OUTPUT_SUFFIX)
 
