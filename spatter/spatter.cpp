@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <cmath>
 #include <cassert>
-#include <sys/time.h>
+#include <chrono>
 
 #ifdef GEM5_ANNOTATION
 #include "gem5/m5ops.h"
@@ -21,17 +21,8 @@ using json = nlohmann::json;
 typedef uint64_t TElement;
 typedef uint64_t TIndex;
 
-extern void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size);
-
-extern void scatter(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t& array_size);
-
-double get_second() {
-    struct timeval tp;
-    struct timezone tzp;
-    int i;
-    i = gettimeofday(&tp,&tzp);
-    return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
-}
+extern "C" void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t array_size);
+extern "C" void scatter(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t array_size);
 
 enum KernelType { Gather = 0, Scatter };
 
@@ -72,8 +63,6 @@ class ScatterGatherKernel {
         std::cout << "  + multiplicity: " << this->multiplicity << std::endl;
     }
     void execute(std::vector<TElement>& dst, std::vector<TElement>& src) const {
-        std::cout << "Executing ";
-        this->doPrint();
         switch (this->kernel_type) {
             case KernelType::Gather:
                 for (size_t iter = 0; iter < this->multiplicity; iter++)
@@ -119,23 +108,28 @@ void executeKernels(const char* filename) {
     std::vector<TElement> src = std::vector<TElement>(array_size, 2);
     std::vector<TElement> dst = std::vector<TElement>(array_size, 3);
     double t_total = 0;
-    double t_start = 0;
-    double t_end = 0;
+    std::vector<double> elapsed_time_per_kernel;
+    elapsed_time_per_kernel.reserve(kernels.size());
 
 #ifdef GEM5_ANNOTATION
     m5_work_begin(0, 0);
 #endif
     for (auto const& k: kernels) {
-        t_start = get_second();
+        const auto t_start = std::chrono::steady_clock::now();
         k.execute(dst, src);
-        t_end = get_second();
-        t_total += (t_end - t_start);
-        std::cout << "Execute time: " << (t_end - t_start) << " seconds" << std::endl;
+        const auto t_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> delta_t = t_end - t_start;
+        t_total += delta_t.count();
+        elapsed_time_per_kernel.push_back(delta_t.count());
     }
-    std::cout << "Total Elapsed Time: " << (t_total) << " seconds" << std::endl;
 #ifdef GEM5_ANNOTATION
     m5_work_end(0, 0);
 #endif
+    for (size_t t = 0; t < kernels.size(); t++) {
+        kernels[t].doPrint();
+        std::cout << "Execute time: " << elapsed_time_per_kernel[t] << " seconds" << std::endl;
+    }
+    std::cout << "Total Elapsed Time: " << (t_total) << " seconds" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
