@@ -1,0 +1,34 @@
+CC = gcc
+CXX = g++
+OUTPUT_PATH ?= .
+OUTPUT_SUFFIX = .hw.sve
+CFLAGS_KERNELS = -O3 -fopenmp -ftree-vectorize -march=armv8.1-a+sve
+CXXFLAGS_MAIN = -O3 -fopenmp
+LDFLAGS = -O3 -fopenmp
+JSON_LIBRARY_INCLUDE = ../json/single_include/nlohmann/
+
+# if both m5ops_header_path and m5_build_path are defined, we build the scatter/gather kernels with the m5 annotations
+ifneq ($(M5_BUILD_PATH),)
+  CXXFLAGS_MAIN += -I$(M5OPS_HEADER_PATH)
+  CXXFLAGS_MAIN += -O -DGEM5_ANNOTATION=1
+  LDFLAGS += -I$(M5OPS_HEADER_PATH) -lm5 -L$(M5_BUILD_PATH)/out/
+  TMP_OUTPUT_SUFFIX = $(OUTPUT_SUFFIX)
+  OUTPUT_SUFFIX := $(TMP_OUTPUT_SUFFIX).m5
+endif
+
+CXXFLAGS_MAIN += -I$(JSON_LIBRARY_INCLUDE)
+
+all: spatter
+
+scatter_gather_kernels$(OUTPUT_SUFFIX).o: scatter_gather_kernels.c
+	$(CC) $(CFLAGS_KERNELS) -c scatter_gather_kernels.c -o $(OUTPUT_PATH)/scatter_gather_kernels$(OUTPUT_SUFFIX).o
+
+spatter$(OUTPUT_SUFFIX).o: spatter.cpp
+	$(CXX) $(CXXFLAGS_MAIN) -c spatter.cpp -o $(OUTPUT_PATH)/spatter$(OUTPUT_SUFFIX).o
+
+spatter: scatter_gather_kernels$(OUTPUT_SUFFIX).o spatter$(OUTPUT_SUFFIX).o
+	$(CXX) spatter$(OUTPUT_SUFFIX).o scatter_gather_kernels$(OUTPUT_SUFFIX).o -o $(OUTPUT_PATH)/spatter$(OUTPUT_SUFFIX) $(LDFLAGS)
+
+clean:
+	rm -f *$(OUTPUT_SUFFIX).o spatter$(OUTPUT_SUFFIX)
+
