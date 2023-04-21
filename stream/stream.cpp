@@ -148,34 +148,34 @@ size_t get_num_omp_threads()
 
 double copy(std::vector<TElement>& dst, std::vector<TElement>& src)
 {
-    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
+    const auto t_start = std::chrono::steady_clock::now();
     do_copy(dst.data(), src.data(), dst.size());
-    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+    const auto t_end = std::chrono::steady_clock::now();
     std::chrono::duration<double> delta_t = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
     return delta_t.count();
 }
 double scale(std::vector<TElement>& dst, std::vector<TElement>& src, const TElement& scale_factor)
 {
-    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
+    const auto t_start = std::chrono::steady_clock::now();
     do_scale(dst.data(), src.data(), scale_factor, dst.size());
-    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+    const auto t_end = std::chrono::steady_clock::now();
     std::chrono::duration<double> delta_t = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
     return delta_t.count();
 }
 double add(std::vector<TElement>& dst, std::vector<TElement>& src1, std::vector<TElement>& src2)
 {
-    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
+    auto t_start = std::chrono::steady_clock::now();
     do_add(dst.data(), src1.data(), src2.data(), dst.size());
-    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+    const auto t_end = std::chrono::steady_clock::now();
     std::chrono::duration<double> delta_t = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
     return delta_t.count();
 
 }
 double triad(std::vector<TElement>& dst, std::vector<TElement>& src1, std::vector<TElement>& src2, const TElement& scale_factor)
 {
-    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
+    const auto t_start = std::chrono::steady_clock::now();
     do_triad(dst.data(), src1.data(), src2.data(), scale_factor, dst.size());
-    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+    const auto t_end = std::chrono::steady_clock::now();
     std::chrono::duration<double> delta_t = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
     return delta_t.count();
 }
