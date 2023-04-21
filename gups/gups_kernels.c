@@ -51,7 +51,7 @@ void doRandomAccess(TElement* __restrict__ table, const TIndex tableSize, const 
         index[i] = RNG((numUpdates/numUpdatesPerBurst) * i);
     for (TIndex i = 0; i < numUpdates / numUpdatesPerBurst; i++)
     {
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for (TIndex j = 0; j < numUpdatesPerBurst; j++)
         {
             index[j] = (index[j] << 1) ^ ((TSignedIndex) index[j] < 0 ? POLY : 0);
