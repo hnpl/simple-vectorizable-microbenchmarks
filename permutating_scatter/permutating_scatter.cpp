@@ -44,10 +44,20 @@ class IndexGenerator
         }
 };
 
-int main()
+int main(int argc, char* argv[])
 {
-    const int SIZE = 10000018;
-    const int N_INDEX = 10000018;
+    if (!((argc == 1) || (argc == 3)))
+    {
+        std::cout << "Usage:    " << argv[0] << std::endl;
+        std::cout << "       or " << argv[0] << " <seed> <mod>" << std::endl;
+        std::cout << "where multiplicative_order(seed, mod) = mod-1." <<std::endl;
+        std::cout << "If seed and mod are not supplied, the default seed is 17 and the default mod is 100000007." << std::endl;
+        return 1;
+    }
+    const int SEED = (argc == 1) ? 17 : atoi(argv[1]);
+    const int MOD = (argc == 1) ? 100'000'007 : atoi(argv[2]);
+    const int SIZE = MOD - 1;
+    const int N_INDEX = SIZE;
 
     const size_t num_threads = get_num_omp_threads();
     std::cout << "Number of threads: " << num_threads << std::endl;
@@ -61,8 +71,8 @@ int main()
         src[i] = i;
 
     // Creating index
-    const TElement seed = 31;
-    const TElement mod = 10000019;
+    const TElement seed = SEED;
+    const TElement mod = MOD;
     // This index generator will essentially perform a permutation of the src to the dst
     IndexGenerator rng(seed, mod);
     for (TIndex i = 0; i < N_INDEX; i++)
@@ -90,8 +100,8 @@ int main()
     double bandwidth_bytes = data_size / time;
     double bandwidth_GiB = bandwidth_bytes / 1024.0 / 1024.0 / 1024.0;
 
-    std::cout << "Elapsed_time: " << time << " s" << std::endl;
-    std::cout << "Bandwidth: " << bandwidth_GiB << " GiB/s" << std::endl;
+    std::cout << "Elapsed time: " << time << " s" << std::endl;
+    std::cout << "Effective bandwidth: " << bandwidth_GiB << " GiB/s" << std::endl;
 
     // Checking result
     rng.reset();
@@ -111,3 +121,4 @@ size_t get_num_omp_threads()
 #endif
     return num_threads;
 }
+
