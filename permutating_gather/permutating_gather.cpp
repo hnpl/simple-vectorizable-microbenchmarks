@@ -4,24 +4,15 @@
 #include<chrono>
 #include<iostream>
 
+#ifdef GEM5_ANNOTATION
+#include <gem5/m5ops.h>
+#endif
+
 typedef uint64_t TElement;
 typedef uint64_t TIndex;
 
-__attribute__((optimize("tree-vectorize")))
-void restricted_gather_load(TElement* __restrict__ dst, TElement* __restrict__ src, TIndex* __restrict__ indices, const TIndex& n_indices)
-{
-    for (TIndex i = 0; i < n_indices; i++)
-        dst[i] = src[indices[i]];
-}
-
-// Tell the compiler not to inline this function for having a deterministic behavior.
-// Originally, without the __restrict__ keyword, the compiler vectorizes the loop if this function is inlined, and does
-// not vectorize it if the function is not inlined (since src != dst is not proven by the compiler)
-__attribute__((noinline)) __attribute__((optimize("tree-vectorize")))
-void gather_load(std::vector<TElement>& dst, std::vector<TElement>& src, std::vector<TIndex>& indices)
-{
-    restricted_gather_load(dst.data(), src.data(), indices.data(), indices.size());
-}
+extern "C" void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t array_size);
+size_t get_num_omp_threads();
 
 class IndexGenerator
 {
@@ -58,6 +49,9 @@ int main()
     const int SIZE = 10000018;
     const int N_INDEX = 10000018;
 
+    const size_t num_threads = get_num_omp_threads();
+    std::cout << "Number of threads: " << num_threads << std::endl;
+
     std::vector<TElement> src(SIZE, 0);
     std::vector<TElement> dst(SIZE, 0);
     std::vector<TIndex> indices(N_INDEX, 0);
@@ -74,12 +68,19 @@ int main()
     for (TIndex i = 0; i < N_INDEX; i++)
         indices[i] = rng.next()-1;
 
-    std::chrono::high_resolution_clock::time_point t_start = std::chrono::high_resolution_clock::now();
+#ifdef GEM5_ANNOTATION
+    m5_work_begin(0, 0);
+#endif
+    const auto t_start = std::chrono::steady_clock::now();
     // Performing indexed-loads
-    gather_load(dst, src, indices);
-    std::chrono::high_resolution_clock::time_point t_end = std::chrono::high_resolution_clock::now();
+    gather(dst.data(), src.data(), indices.data(), indices.size());
+    const auto t_end = std::chrono::steady_clock::now();
 
     std::chrono::duration<double> elapsed_time = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_start);
+
+#ifdef GEM5_ANNOTATION
+    m5_work_end(0, 0);
+#endif
 
     // https://stackoverflow.com/questions/57538507/how-to-convert-stdchronoduration-to-double-seconds
     using namespace std::literals::chrono_literals;
@@ -98,3 +99,15 @@ int main()
 
     return 0;
 }
+
+size_t get_num_omp_threads()
+{
+    size_t num_threads = 0;
+#ifdef _OPENMP
+#pragma omp parallel
+#pragma omp atomic
+    num_threads++;
+#endif
+    return num_threads;
+}
+
