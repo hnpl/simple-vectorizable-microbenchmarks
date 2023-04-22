@@ -1,7 +1,7 @@
 CC ?= gcc
 CXX ?= g++
 OUTPUT_PATH ?= .
-OUTPUT_SUFFIX = .hw
+OUTPUT_SUFFIX = .hw.sve
 CFLAGS_KERNEL = -O2 -fopenmp -march=armv8.1-a+sve
 CXXFLAGS = -O2 -fopenmp
 LDFLAGS = -O2 -fopenmp
