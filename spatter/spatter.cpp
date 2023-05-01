@@ -24,6 +24,8 @@ typedef uint64_t TIndex;
 extern "C" void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t array_size);
 extern "C" void scatter(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t array_size);
 
+size_t get_num_omp_threads();
+
 enum KernelType { Gather = 0, Scatter };
 
 class ScatterGatherKernel {
@@ -60,6 +62,7 @@ class ScatterGatherKernel {
             std::cout << "Scatter";
         std::cout << std::endl;
         std::cout << "  + size: " << this->index.size() << std::endl;
+        std::cout << "  + index range: [0, " << this->getMaxIndex() << "]" << std::endl;
         std::cout << "  + multiplicity: " << this->multiplicity << std::endl;
     }
     void execute(std::vector<TElement>& dst, std::vector<TElement>& src) const {
@@ -100,32 +103,39 @@ std::vector<ScatterGatherKernel> read_spatter_json(const char* filename) {
 
 void executeKernels(const char* filename) {
     auto kernels = read_spatter_json(filename);
-    size_t array_size = 0;
-    for (auto const& k: kernels)
-        array_size = std::max(array_size, k.getMaxIndex()+1);
-    array_size = pow(2, int(log(array_size) / log(2)) + 1);
+    const size_t num_kernels = kernels.size();
 
-    std::vector<TElement> src = std::vector<TElement>(array_size, 2);
-    std::vector<TElement> dst = std::vector<TElement>(array_size, 3);
+    std::vector<std::vector<TElement>> src;
+    std::vector<std::vector<TElement>> dst;
+
+    // create different src and dst arrays for different kernels
+    for (auto const& k: kernels) {
+        size_t array_size = pow(2, int(log2(k.getMaxIndex()+1))+1);
+        src.emplace_back(std::move(std::vector<TElement>(array_size, 2)));
+        dst.emplace_back(std::move(std::vector<TElement>(array_size, 3)));
+    }
+
     double t_total = 0;
-    std::vector<double> elapsed_time_per_kernel;
-    elapsed_time_per_kernel.reserve(kernels.size());
+    std::vector<double> elapsed_time_per_kernel(num_kernels, 0.0);
 
 #ifdef GEM5_ANNOTATION
     m5_work_begin(0, 0);
 #endif
+    size_t kernelIdx = 0;
     for (auto const& k: kernels) {
         const auto t_start = std::chrono::steady_clock::now();
-        k.execute(dst, src);
+        k.execute(dst[kernelIdx], src[kernelIdx]);
         const auto t_end = std::chrono::steady_clock::now();
         std::chrono::duration<double> delta_t = t_end - t_start;
         t_total += delta_t.count();
-        elapsed_time_per_kernel.push_back(delta_t.count());
+        elapsed_time_per_kernel[kernelIdx] = delta_t.count();
+        kernelIdx += 1;
     }
 #ifdef GEM5_ANNOTATION
     m5_work_end(0, 0);
 #endif
-    for (size_t t = 0; t < kernels.size(); t++) {
+
+    for (size_t t = 0; t < num_kernels; t++) {
         kernels[t].doPrint();
         std::cout << "Execute time: " << elapsed_time_per_kernel[t] << " seconds" << std::endl;
     }
@@ -137,6 +147,19 @@ int main(int argc, char* argv[]) {
         std::cout << "Usage: " << argv[0] << " <path_to_json_file>" << std::endl;
         return 1;
     }
+    const size_t num_threads = get_num_omp_threads();
+    std::cout << "Number of threads: " << num_threads << std::endl;
     executeKernels(argv[1]);
     return 0;
+}
+
+size_t get_num_omp_threads()
+{
+    size_t num_threads = 0;
+#ifdef _OPENMP
+#pragma omp parallel
+#pragma omp atomic
+    num_threads++;
+#endif
+    return num_threads;
 }
