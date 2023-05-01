@@ -53,6 +53,9 @@ class ScatterGatherKernel {
         auto it = std::max_element(this->index.begin(), this->index.end());
         return std::max(*it, this->index.size());
     }
+    size_t getNumIndex() const {
+        return index.size();
+    }
     void doPrint() const {
         std::cout << "Kernel" << std::endl;
         std::cout << "  + type: ";
@@ -127,7 +130,6 @@ void executeKernels(const char* filename) {
         k.execute(dst[kernelIdx], src[kernelIdx]);
         const auto t_end = std::chrono::steady_clock::now();
         std::chrono::duration<double> delta_t = t_end - t_start;
-        t_total += delta_t.count();
         elapsed_time_per_kernel[kernelIdx] = delta_t.count();
         kernelIdx += 1;
     }
@@ -135,11 +137,22 @@ void executeKernels(const char* filename) {
     m5_work_end(0, 0);
 #endif
 
+    // Reporting
+    double total_effective_data_size_in_bytes = 0;
     for (size_t t = 0; t < num_kernels; t++) {
         kernels[t].doPrint();
-        std::cout << "Execute time: " << elapsed_time_per_kernel[t] << " seconds" << std::endl;
+        std::cout << "Execute Time: " << elapsed_time_per_kernel[t] << " seconds" << std::endl;
+        double effective_data_size_in_bytes = kernels[t].getNumIndex() * sizeof(TElement) * 2;
+        double effective_data_size_in_GiB = effective_data_size_in_bytes / 1024.0 / 1024.0 / 1024.0;
+        double effective_bandwidth = effective_data_size_in_GiB / elapsed_time_per_kernel[t];
+        std::cout << "Effective Bandwidth: " << effective_bandwidth << " GiB/s" << std::endl;
+        total_effective_data_size_in_bytes += effective_data_size_in_bytes; // 1 load and 1 store for 1 index
+        t_total += elapsed_time_per_kernel[t];
     }
     std::cout << "Total Elapsed Time: " << (t_total) << " seconds" << std::endl;
+    double total_effective_data_size_in_GiB = total_effective_data_size_in_bytes / 1024.0 / 1024.0 / 1024.0;
+    double total_effective_bandwidth = total_effective_data_size_in_GiB / t_total;
+    std::cout << "Total Effective Bandwidth: " << total_effective_bandwidth << " GiB/s" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
