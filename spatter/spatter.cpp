@@ -18,7 +18,7 @@
 
 using json = nlohmann::json;
 
-typedef uint64_t TElement;
+typedef double TElement;
 typedef uint64_t TIndex;
 
 extern "C" void gather(TElement* __restrict__ dst, TElement* __restrict__ src, const TIndex* __restrict__ indices, const size_t array_size);
